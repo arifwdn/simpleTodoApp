@@ -2,12 +2,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const todos = [];
   const RENDER_EVENT = "render_todo";
   document.addEventListener(RENDER_EVENT, () => {
-    const uncompletedTODOList = document.getElementById("todos");
+    const uncompletedTODOList = document.getElementById("uncompleted-todos");
     uncompletedTODOList.innerHTML = "";
+
+    const completedTODOList = document.getElementById("completed-todos");
+    completedTODOList.innerHTML = "";
 
     for (let todoItem of todos) {
       let todoElement = makeTodo(todoItem);
-      uncompletedTODOList.append(todoElement);
+      if (!todoItem.isCompleted) {
+        uncompletedTODOList.append(todoElement);
+      } else {
+        completedTODOList.append(todoElement);
+      }
     }
   });
   const title = document.getElementById("title");
@@ -66,6 +73,50 @@ document.addEventListener("DOMContentLoaded", () => {
     container.append(textContainer);
     container.setAttribute("id", `todo-${todoObject.id}`);
 
+    if (todoObject.isCompleted) {
+      const undoButton = document.createElement("button");
+      undoButton.classList.add("undo-button");
+
+      undoButton.addEventListener("click", () => {
+        undoTaskFromCompleted(todoObject.id);
+      });
+
+      const trashButton = document.createElement("button");
+      trashButton.classList.add("trash-button");
+
+      trashButton.addEventListener("click", () => {
+        removeTaskFromCompleted(todoObject.id);
+      });
+
+      container.append(undoButton, trashButton);
+    } else {
+      const checkButton = document.createElement("button");
+      checkButton.classList.add("check-button");
+
+      checkButton.addEventListener("click", () => {
+        addTaskCompleted(todoObject.id);
+      });
+
+      container.append(checkButton);
+    }
+
     return container;
+  };
+
+  const addTaskCompleted = (todoId) => {
+    const todoTarget = findTodo(todoId);
+    if (todoTarget == null) return;
+
+    todoTarget.isCompleted = true;
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  };
+
+  const findTodo = (todoId) => {
+    for (let todoItem of todos) {
+      if (todoItem.id === todoId) {
+        return todoItem;
+      }
+    }
+    return null;
   };
 });
