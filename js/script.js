@@ -119,4 +119,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return null;
   };
+
+  const findTodoIndex = (todoId) => {
+    for (let index in todos) {
+      if (todos[index].id === todoId) return index;
+    }
+
+    return -1;
+  };
+  const removeTaskFromCompleted = (idTodo) => {
+    let todoTarget = findTodoIndex(idTodo);
+    if (todoTarget === -1) return;
+    todos.splice(todoTarget, 1);
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  };
+
+  const undoTaskFromCompleted = (idTodo) => {
+    let todoTarget = findTodo(idTodo);
+
+    if (todoTarget === null) return;
+
+    todoTarget.isCompleted = false;
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  };
 });
