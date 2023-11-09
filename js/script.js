@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const todos = [];
   const RENDER_EVENT = "render_todo";
+  const STORAGE_KEY = "TODO_APPS";
+
   document.addEventListener(RENDER_EVENT, () => {
     const uncompletedTODOList = document.getElementById("uncompleted-todos");
     uncompletedTODOList.innerHTML = "";
@@ -17,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
   const title = document.getElementById("title");
   const tgl = document.getElementById("date");
   title.addEventListener("input", () => {
@@ -33,21 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp,
       isCompleted,
     };
-  };
-  const addTodo = () => {
-    const textTodo = title.value;
-    const timestamp = tgl.value;
-
-    const generatedID = generateID();
-    const todoObject = generateTodoObject(
-      generatedID,
-      textTodo,
-      timestamp,
-      false
-    );
-    todos.push(todoObject);
-
-    document.dispatchEvent(new Event(RENDER_EVENT));
   };
   const submitForm = document.getElementById("form");
   submitForm.addEventListener("submit", function (event) {
@@ -103,12 +91,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return container;
   };
 
+  const addTodo = () => {
+    const textTodo = title.value;
+    const timestamp = tgl.value;
+
+    const generatedID = generateID();
+    const todoObject = generateTodoObject(
+      generatedID,
+      textTodo,
+      timestamp,
+      false
+    );
+    todos.push(todoObject);
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
+  };
+
   const addTaskCompleted = (todoId) => {
     const todoTarget = findTodo(todoId);
     if (todoTarget == null) return;
 
     todoTarget.isCompleted = true;
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
   };
 
   const findTodo = (todoId) => {
@@ -133,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     todos.splice(todoTarget, 1);
 
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
   };
 
   const undoTaskFromCompleted = (idTodo) => {
@@ -143,5 +150,36 @@ document.addEventListener("DOMContentLoaded", () => {
     todoTarget.isCompleted = false;
 
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
   };
+  const saveData = () => {
+    if (isStorageExist()) {
+      const parsed = JSON.stringify(todos);
+      localStorage.setItem(STORAGE_KEY, parsed);
+    }
+  };
+
+  const isStorageExist = () => {
+    if (typeof Storage === undefined) {
+      alert("Browser tidak mendukung local storage");
+      return false;
+    }
+    return true;
+  };
+
+  const loadDataFromStorage = () => {
+    let data = localStorage.getItem(STORAGE_KEY);
+    data = JSON.parse(data);
+
+    if (data !== null) {
+      for (let todo of data) {
+        todos.push(todo);
+      }
+    }
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  };
+
+  if (isStorageExist()) {
+    loadDataFromStorage();
+  }
 });
